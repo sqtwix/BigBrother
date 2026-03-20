@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36616.10 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigBrother.Presentation", "BigBrotherApp\BigBrother.Presentation.csproj", "{454DE927-7F51-4D72-9F7D-21CAD3B46E9F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigBrother.Domain", "BigBrother.Domain\BigBrother.Domain.csproj", "{6B012CCF-6596-4A41-8202-1313DEBAEAAC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{454DE927-7F51-4D72-9F7D-21CAD3B46E9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{454DE927-7F51-4D72-9F7D-21CAD3B46E9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{454DE927-7F51-4D72-9F7D-21CAD3B46E9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{454DE927-7F51-4D72-9F7D-21CAD3B46E9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B012CCF-6596-4A41-8202-1313DEBAEAAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B012CCF-6596-4A41-8202-1313DEBAEAAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B012CCF-6596-4A41-8202-1313DEBAEAAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B012CCF-6596-4A41-8202-1313DEBAEAAC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4D632296-432F-4805-B6BE-D93FDEFD6884}
+	EndGlobalSection
+EndGlobal
