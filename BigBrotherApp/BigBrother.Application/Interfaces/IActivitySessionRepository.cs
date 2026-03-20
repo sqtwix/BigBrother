@@ -16,9 +16,12 @@ public interface IActivitySessionRepository
     Task<List<ActivitySession>> GetAllProcessesAsync(DateTime start, DateTime end);
 
     // Get session By Id
-    Task<ActivitySession> GetProcessById(int processId);
+    Task<ActivitySession?> GetProcessById(int processId);
 
     // Deleting process by id
     Task DeleteProcessAsync(int processId);
+
+    // Determined savechanges method
+    Task SaveCnahgesAsync();
 }
 

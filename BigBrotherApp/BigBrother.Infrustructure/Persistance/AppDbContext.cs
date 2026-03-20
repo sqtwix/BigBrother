@@ -14,11 +14,11 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         
         // Set PK for ActivitySession table
-        modelBuilder.Entity<ActivitySessions>()
+        modelBuilder.Entity<ActivitySession>()
             .HasKey(s => s.Id);
 
         // Make index by StartTime for ActivitySession table
-        modelBuilder.Entity<ActivitySessions>().
+        modelBuilder.Entity<ActivitySession>().
             HasIndex(s => s.StartTime);
     }
 }
