@@ -5,7 +5,7 @@ namespace BigBrother.Infrustructure.Persistance;
 
 public class AppDbContext : DbContext
 {
-    public DbSet<ActivitySessions> Sessions { get; set; }
+    public DbSet<ActivitySession> Sessions { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 

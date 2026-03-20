@@ -2,7 +2,7 @@
 
 namespace BigBrother.Domain.Entities;
 
-public class ActivitySessions
+public class ActivitySession
 {
     public int Id { get; set; }
     public string? ProcessName { get; set; } = string.Empty;
