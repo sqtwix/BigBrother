@@ -1,6 +1,6 @@
-﻿namespace BigBrother.Domain.Entities;
+﻿// Entity for storing data about sessions
 
-// Entity for storing data about sessions
+namespace BigBrother.Domain.Entities;
 
 public class ActivitySessions
 {
