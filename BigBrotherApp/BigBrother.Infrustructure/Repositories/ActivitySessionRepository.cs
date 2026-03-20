@@ -62,4 +62,3 @@ public class ActivitySessionRepository : IActivitySessionRepository
         await _context.SaveChangesAsync();
     }
 }
-
