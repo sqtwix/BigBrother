@@ -12,8 +12,14 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        // Set PK for ActivitySession table
+        modelBuilder.Entity<ActivitySessions>()
+            .HasKey(s => s.Id);
 
-        modelBuilder.Entity<ActivitySessions>().HasIndex(s => s.StartTime).HasKey(s => s.Id);
+        // Make index by StartTime for ActivitySession table
+        modelBuilder.Entity<ActivitySessions>().
+            HasIndex(s => s.StartTime);
     }
 }
 
