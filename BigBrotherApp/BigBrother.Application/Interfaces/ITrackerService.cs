@@ -8,11 +8,13 @@ public interface ITrackerService
 {
     // Inteface for methods of TrackerService
 
+    // INNER METHODS (backend code, that not used by UI)
     Task StartTrackingAsync();
     Task StopTrackingAsync();
     void UpdateCurrentSession(object state);
     Task CloseCurrentSessionAsync();
 
+    // EXTERNAL METHODS (methods, that used by UI to get info)
     Task<CurrentActivityDto> GetCurrentActivityAsync(); 
 
     Task<TimeSpan> GetSystemUptimeAsync();
