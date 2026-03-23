@@ -62,27 +62,25 @@ public class TrackerService : ITrackerService
 
     // Inner method for updating info about session every time,
     // that mentioned in Timer
-    private void UpdateCurrentSession(object state)
+    private async void UpdateCurrentSession(object state)
     {
         try
         {
-            var (processName, windowTitle) = GetActiveWindowInfo();
-            var idleTime = GetIdleTime();
+            var (processName, windowTitle) = NativeWinMethods.GetActiveWindowInfo();
+            var idleTime = NativeWinMethods.GetIdleTime();
             bool isUserActive = idleTime < TimeSpan.FromSeconds(IdleTresholdSeconds);
 
             lock (_lock)
             {
-                // Проверка активности пользователя
                 if (!isUserActive || string.IsNullOrEmpty(processName))
                 {
                     if (_currentSession != null)
                     {
-                        _ = CloseCurrentSessionAsync();
+                        _ = CloseCurrentSessionAsync(); // fire-and-forget
                     }
                     return;
                 }
 
-                // Создание или обновление сессии
                 if (_currentSession == null)
                 {
                     _currentSession = new ActivitySession
@@ -91,7 +89,7 @@ public class TrackerService : ITrackerService
                         WindowTitle = windowTitle,
                         StartTime = DateTime.UtcNow
                     };
-                    _ = _activitySessionRepository.AddAsync(_currentSession);
+                    _ = _activitySessionRepository.AddProcessAsync(_currentSession);
                 }
                 else if (_currentSession.ProcessName != processName ||
                          _currentSession.WindowTitle != windowTitle)
@@ -108,12 +106,11 @@ public class TrackerService : ITrackerService
                 }
             }
 
-            // Периодическое сохранение
             await PeriodicSaveAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка в UpdateCurrentSession");
+            _logger.LogError(ex, "Error in UpdateCurrentSession");
         }
     }
 
@@ -131,6 +128,16 @@ public class TrackerService : ITrackerService
             }
         }
         await _activitySessionRepository.SaveCnahgesAsync();
+    }
+
+    // Periodic save info about session in db every 10 seconds
+    private async Task PeriodicSaveAsync()
+    {
+        if ((DateTime.UtcNow - _lastSaveTime).TotalSeconds >= 10)
+        {
+            await _activitySessionRepository.SaveCnahgesAsync();
+            _lastSaveTime = DateTime.UtcNow;
+        }
     }
 
     // EXTERNAL METHODS (methods, that used by UI to get info)
