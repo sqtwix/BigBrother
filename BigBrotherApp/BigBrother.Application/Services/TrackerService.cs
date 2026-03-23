@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using BigBrother.Domain.Entities;
 using BigBrother.Application.Utils;
+using BigBrother.Application.DTOs;
 
 
 namespace BigBrother.Application.Services;
@@ -90,6 +91,7 @@ public class TrackerService : ITrackerService
                         StartTime = DateTime.UtcNow
                     };
                     _ = _activitySessionRepository.AddProcessAsync(_currentSession);
+                    _activitySessionRepository.SaveChangesAsync();
                 }
                 else if (_currentSession.ProcessName != processName ||
                          _currentSession.WindowTitle != windowTitle)
@@ -101,8 +103,9 @@ public class TrackerService : ITrackerService
                         ProcessName = processName,
                         WindowTitle = windowTitle,
                         StartTime = DateTime.UtcNow
-                    };
+                    };  
                     _ = _activitySessionRepository.AddProcessAsync(_currentSession);
+                    _activitySessionRepository.SaveChangesAsync();
                 }
             }
 
@@ -149,5 +152,83 @@ public class TrackerService : ITrackerService
         return await _activitySessionRepository.GetAllProcessesAsync(start, end);
     }
 
-    //
+    // Get time of OS work in currenst session
+    public Task<TimeSpan> GetSystemUptimeAsync()
+    {
+        return Task.FromResult(TimeSpan.FromMilliseconds(Environment.TickCount64));
+    }
+
+    // Get current activity
+    public async Task<CurrentActivityDto> GetCurrentActivityAsync()
+    {
+        lock (_lock)
+        {
+            if (_currentSession != null)
+            {
+                return new CurrentActivityDto
+                {
+                    ProcessName = _currentSession.ProcessName,
+                    WindowTitle = _currentSession.WindowTitle,
+                    Duration = DateTime.UtcNow - _currentSession.StartTime
+                };
+            }
+            
+            return new CurrentActivityDto();
+        }
+    }
+
+    // Get total time of activity in mentioned date
+    public async Task<TimeSpan?> GetTotalActiveTimeForDateAsync(DateTime date)
+    {
+        var result = await _activitySessionRepository.GetAllProcessesInDateAsync(date);
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        int resultLength = result.Count();
+
+        var first = result.First();
+        var last = result.Last();
+
+        return first.StartTime - last.EndTime;
+    }
+
+
+    // Getting top 5 processes by activity time
+    public async Task<List<(string ProcessName, TimeSpan TotalTime)>> GetTopProcessesAsync(DateTime start,
+        DateTime end, int top = 5)
+    {
+        var sessions = await _activitySessionRepository.GetAllProcessesAsync(start, end);
+
+        if (sessions == null || sessions.Count == 0)
+        {
+            return new List<(string ProcessName, TimeSpan TotalTime)>();
+        }
+
+        var grouped = sessions
+       .Where(s => s.EndTime.HasValue)
+       .GroupBy(s => s.ProcessName)
+       .Select(g => (
+           ProcessName: g.Key,
+           TotalTime: TimeSpan.FromTicks(g.Sum(s => (s.EndTime!.Value - s.StartTime).Ticks))
+       ))
+       .OrderByDescending(x => x.TotalTime)
+       .Take(top)
+       .ToList();
+
+        return grouped;
+    }
+
+    // Get all sessions since system start 
+    public async Task<List<ActivitySession>> GetSessionsSinceSystemStartAsync()
+    {
+        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount);
+        var systemStart = DateTime.UtcNow - uptime;
+
+        var session = await _activitySessionRepository.GetAllProcessesAsync(systemStart, DateTime.UtcNow);
+
+        return session ?? new List<ActivitySession>();
+    }
 }

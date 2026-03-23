@@ -24,10 +24,10 @@ public class ActivitySessionRepository : IActivitySessionRepository
     }
 
     // Updating existing session
-    public async Task UpdateProcessAsync(ActivitySession session)
+    public Task UpdateProcess(ActivitySession session)
     {
         _context.Sessions.Update(session);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     // Get all sessions for peroid
@@ -45,6 +45,7 @@ public class ActivitySessionRepository : IActivitySessionRepository
         return await _context.Sessions.FindAsync(new object[] { processId });
     }
 
+
     // Deleting process by id
     public async Task DeleteProcessAsync(int processId)
     {
@@ -56,8 +57,18 @@ public class ActivitySessionRepository : IActivitySessionRepository
         }
     }
 
+    // Getting all processes in mentioned date
+    public async Task<List<ActivitySession>> GetAllProcessesInDateAsync(DateTime date)
+    {
+        var query = _context.Sessions
+            .Where(s => (s.StartTime <= date && s.EndTime >= date) ||
+            (s.EndTime == null && s.StartTime != null));
+
+        return await query.ToListAsync();
+    }
+
     // Determined savechanges method
-    public async Task SaveCnahgesAsync()
+    public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
     }

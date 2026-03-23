@@ -13,6 +13,7 @@ public interface ITrackerService
     Task StopTrackingAsync();
     void UpdateCurrentSession(object state);
     Task CloseCurrentSessionAsync();
+    Task PeriodicSaveAsync();
 
     // EXTERNAL METHODS (methods, that used by UI to get info)
     Task<CurrentActivityDto> GetCurrentActivityAsync(); 

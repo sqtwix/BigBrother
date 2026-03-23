@@ -21,7 +21,10 @@ public interface IActivitySessionRepository
     // Deleting process by id
     Task DeleteProcessAsync(int processId);
 
+    // Get process in date
+    Task<List<ActivitySession>> GetAllProcessesInDateAsync(DateTime date);
+
     // Determined savechanges method
-    Task SaveCnahgesAsync();
+    Task SaveChangesAsync();
 }
 
