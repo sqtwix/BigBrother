@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using BigBrother.Domain.Entities;
+using BigBrother.Application.Utils;
 
 
 namespace BigBrother.Application.Services;
@@ -31,6 +32,12 @@ public class TrackerService : ITrackerService
     // Const time of Treshold
     private const int IdleTresholdSeconds = 60;
 
+    // Filed for storing current session
+    private ActivitySession? _currentSession;
+
+    // For periodic saving info about session
+    private DateTime _lastSaveTime = DateTime.UtcNow;
+
     public TrackerService(IActivitySessionRepository activitySessionRepository,
                           ILogger<TrackerService> logger)
     {
@@ -48,9 +55,9 @@ public class TrackerService : ITrackerService
     }
 
     // Inner method for stopping timer
-    public Task StopTrackingAsync() { 
+    public async Task StopTrackingAsync() { 
         _timer.Dispose();
-        return Task.CompletedTask;
+        await CloseCurrentSessionAsync();
     }
 
     // Inner method for updating info about session every time,
@@ -59,15 +66,71 @@ public class TrackerService : ITrackerService
     {
         try
         {
+            var (processName, windowTitle) = GetActiveWindowInfo();
+            var idleTime = GetIdleTime();
+            bool isUserActive = idleTime < TimeSpan.FromSeconds(IdleTresholdSeconds);
+
             lock (_lock)
-            { 
-            
+            {
+                // Проверка активности пользователя
+                if (!isUserActive || string.IsNullOrEmpty(processName))
+                {
+                    if (_currentSession != null)
+                    {
+                        _ = CloseCurrentSessionAsync();
+                    }
+                    return;
+                }
+
+                // Создание или обновление сессии
+                if (_currentSession == null)
+                {
+                    _currentSession = new ActivitySession
+                    {
+                        ProcessName = processName,
+                        WindowTitle = windowTitle,
+                        StartTime = DateTime.UtcNow
+                    };
+                    _ = _activitySessionRepository.AddAsync(_currentSession);
+                }
+                else if (_currentSession.ProcessName != processName ||
+                         _currentSession.WindowTitle != windowTitle)
+                {
+                    _ = CloseCurrentSessionAsync();
+
+                    _currentSession = new ActivitySession
+                    {
+                        ProcessName = processName,
+                        WindowTitle = windowTitle,
+                        StartTime = DateTime.UtcNow
+                    };
+                    _ = _activitySessionRepository.AddProcessAsync(_currentSession);
+                }
+            }
+
+            // Периодическое сохранение
+            await PeriodicSaveAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка в UpdateCurrentSession");
+        }
+    }
+
+    // Inner method for closing current session
+    // and adding EndTime info in db
+    private async Task CloseCurrentSessionAsync()
+    {
+        lock (_lock)
+        {
+            if (_currentSession != null)
+            {
+                _currentSession.EndTime = DateTime.UtcNow;
+                _ = _activitySessionRepository.UpdateProcessAsync(_currentSession);
+                _currentSession = null;
             }
         }
-        catch (Exception ex) 
-        {
-            _logger.LogError(ex.Message);
-        }
+        await _activitySessionRepository.SaveCnahgesAsync();
     }
 
     // EXTERNAL METHODS (methods, that used by UI to get info)
@@ -79,5 +142,5 @@ public class TrackerService : ITrackerService
         return await _activitySessionRepository.GetAllProcessesAsync(start, end);
     }
 
-
+    //
 }
