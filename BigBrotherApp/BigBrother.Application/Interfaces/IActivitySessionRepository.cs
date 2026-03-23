@@ -10,7 +10,7 @@ public interface IActivitySessionRepository
     Task AddProcessAsync(ActivitySession session);
     
     // Updating existing session
-    Task UpdateProcessAsync(ActivitySession session);
+    Task UpdateProcess(ActivitySession session);
     
     // Get all sessions for peroid
     Task<List<ActivitySession>> GetAllProcessesAsync(DateTime start, DateTime end);

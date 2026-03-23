@@ -60,11 +60,11 @@ public class ActivitySessionRepository : IActivitySessionRepository
     // Getting all processes in mentioned date
     public async Task<List<ActivitySession>> GetAllProcessesInDateAsync(DateTime date)
     {
-        var query = _context.Sessions
-            .Where(s => (s.StartTime <= date && s.EndTime >= date) ||
-            (s.EndTime == null && s.StartTime != null));
-
-        return await query.ToListAsync();
+        var dayStart = date.Date;
+        var dayEnd = dayStart.AddDays(1);
+        return await _context.Sessions
+            .Where(s => s.StartTime < dayEnd && (s.EndTime == null || s.EndTime > dayStart))
+            .ToListAsync();
     }
 
     // Determined savechanges method

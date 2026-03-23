@@ -39,6 +39,9 @@ public class TrackerService : ITrackerService
     // For periodic saving info about session
     private DateTime _lastSaveTime = DateTime.UtcNow;
 
+    // Shows state of timer
+    private bool _isTracking;
+
     public TrackerService(IActivitySessionRepository activitySessionRepository,
                           ILogger<TrackerService> logger)
     {
@@ -51,13 +54,24 @@ public class TrackerService : ITrackerService
     // Inner method fot starting timer
     public Task StartTrackingAsync()
     {
+        if (_isTracking)
+        {
+            return Task.CompletedTask;
+        }
+
+        _isTracking = true;
         _timer = new Timer(UpdateCurrentSession, null, 0, 1000);
         return Task.CompletedTask;
     }
 
     // Inner method for stopping timer
-    public async Task StopTrackingAsync() { 
-        _timer.Dispose();
+    public async Task StopTrackingAsync() {
+        if (!_isTracking) {
+            return;
+        }
+
+        _isTracking = false;
+        _timer?.Dispose();
         await CloseCurrentSessionAsync();
     }
 
@@ -91,7 +105,6 @@ public class TrackerService : ITrackerService
                         StartTime = DateTime.UtcNow
                     };
                     _ = _activitySessionRepository.AddProcessAsync(_currentSession);
-                    _activitySessionRepository.SaveChangesAsync();
                 }
                 else if (_currentSession.ProcessName != processName ||
                          _currentSession.WindowTitle != windowTitle)
@@ -105,7 +118,6 @@ public class TrackerService : ITrackerService
                         StartTime = DateTime.UtcNow
                     };  
                     _ = _activitySessionRepository.AddProcessAsync(_currentSession);
-                    _activitySessionRepository.SaveChangesAsync();
                 }
             }
 
@@ -121,16 +133,29 @@ public class TrackerService : ITrackerService
     // and adding EndTime info in db
     private async Task CloseCurrentSessionAsync()
     {
+        ActivitySession? sessionToClose = null;
         lock (_lock)
         {
             if (_currentSession != null)
             {
                 _currentSession.EndTime = DateTime.UtcNow;
-                _ = _activitySessionRepository.UpdateProcessAsync(_currentSession);
+                sessionToClose = _currentSession;
                 _currentSession = null;
             }
         }
-        await _activitySessionRepository.SaveCnahgesAsync();
+
+        if (sessionToClose != null)
+        {
+            try
+            {
+                await _activitySessionRepository.UpdateProcess(sessionToClose);
+                await _activitySessionRepository.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error closing session for {ProcessName}", sessionToClose.ProcessName);
+            }
+        }
     }
 
     // Periodic save info about session in db every 10 seconds
@@ -138,7 +163,7 @@ public class TrackerService : ITrackerService
     {
         if ((DateTime.UtcNow - _lastSaveTime).TotalSeconds >= 10)
         {
-            await _activitySessionRepository.SaveCnahgesAsync();
+            await _activitySessionRepository.SaveChangesAsync();
             _lastSaveTime = DateTime.UtcNow;
         }
     }
@@ -180,19 +205,28 @@ public class TrackerService : ITrackerService
     // Get total time of activity in mentioned date
     public async Task<TimeSpan?> GetTotalActiveTimeForDateAsync(DateTime date)
     {
-        var result = await _activitySessionRepository.GetAllProcessesInDateAsync(date);
+        var sessions = await _activitySessionRepository.GetAllProcessesInDateAsync(date);
 
-        if (result == null)
+        if (sessions == null || sessions.Count == 0)
         {
-            return null;
+            return TimeSpan.Zero;
         }
 
-        int resultLength = result.Count();
-
-        var first = result.First();
-        var last = result.Last();
-
-        return first.StartTime - last.EndTime;
+        TimeSpan total = TimeSpan.Zero;
+        foreach (var s in sessions)
+        {
+            var end = s.EndTime ?? DateTime.UtcNow;
+            var start = s.StartTime;
+            var dayStart = date.Date;
+            var dayEnd = dayStart.AddDays(1);
+            var effectiveStart = start > dayStart ? start : dayStart;
+            var effectiveEnd = end < dayEnd ? end : dayEnd;
+            if (effectiveEnd > effectiveStart)
+            {
+                total += effectiveEnd - effectiveStart;
+            }
+        }
+        return total;
     }
 
 
@@ -224,7 +258,7 @@ public class TrackerService : ITrackerService
     // Get all sessions since system start 
     public async Task<List<ActivitySession>> GetSessionsSinceSystemStartAsync()
     {
-        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount);
+        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
         var systemStart = DateTime.UtcNow - uptime;
 
         var session = await _activitySessionRepository.GetAllProcessesAsync(systemStart, DateTime.UtcNow);
