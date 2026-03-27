@@ -171,33 +171,54 @@ public class TrackerService : ITrackerService
     // EXTERNAL METHODS (methods, that used by UI to get info)
 
     // Get sessions for mentioned peroid
-    public async Task<List<ActivitySession>> GetSessionsForPeriodAsync(DateTime start, 
+    public async Task<List<ActivitySession>> GetSessionsForPeriodAsync(DateTime start,
                                                                  DateTime end)
     {
-        return await _activitySessionRepository.GetAllProcessesAsync(start, end);
+        try
+        {
+            return await _activitySessionRepository.GetAllProcessesAsync(start, end);
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Error getting sessions for period");
+            return new List<ActivitySession>();
+        }
     }
 
     // Get time of OS work in currenst session
     public Task<TimeSpan> GetSystemUptimeAsync()
     {
-        return Task.FromResult(TimeSpan.FromMilliseconds(Environment.TickCount64));
+        try
+        {
+            return Task.FromResult(TimeSpan.FromMilliseconds(Environment.TickCount64));
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Error getting system uptime");
+            return Task.FromResult(TimeSpan.Zero);
+        }
     }
 
     // Get current activity
     public async Task<CurrentActivityDto> GetCurrentActivityAsync()
     {
-        lock (_lock)
+        try
         {
-            if (_currentSession != null)
+            lock (_lock)
             {
-                return new CurrentActivityDto
+                if (_currentSession != null)
                 {
-                    ProcessName = _currentSession.ProcessName,
-                    WindowTitle = _currentSession.WindowTitle,
-                    Duration = DateTime.UtcNow - _currentSession.StartTime
-                };
+                    return new CurrentActivityDto
+                    {
+                        ProcessName = _currentSession.ProcessName,
+                        WindowTitle = _currentSession.WindowTitle,
+                        Duration = DateTime.UtcNow - _currentSession.StartTime
+                    };
+                }
+
+                return new CurrentActivityDto();
             }
-            
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Error getting current activity");
             return new CurrentActivityDto();
         }
     }
@@ -205,28 +226,35 @@ public class TrackerService : ITrackerService
     // Get total time of activity in mentioned date
     public async Task<TimeSpan?> GetTotalActiveTimeForDateAsync(DateTime date)
     {
-        var sessions = await _activitySessionRepository.GetAllProcessesInDateAsync(date);
-
-        if (sessions == null || sessions.Count == 0)
+        try
         {
+            var sessions = await _activitySessionRepository.GetAllProcessesInDateAsync(date);
+
+            if (sessions == null || sessions.Count == 0)
+            {
+                return TimeSpan.Zero;
+            }
+
+            TimeSpan total = TimeSpan.Zero;
+            foreach (var s in sessions)
+            {
+                var end = s.EndTime ?? DateTime.UtcNow;
+                var start = s.StartTime;
+                var dayStart = date.Date;
+                var dayEnd = dayStart.AddDays(1);
+                var effectiveStart = start > dayStart ? start : dayStart;
+                var effectiveEnd = end < dayEnd ? end : dayEnd;
+                if (effectiveEnd > effectiveStart)
+                {
+                    total += effectiveEnd - effectiveStart;
+                }
+            }
+            return total;
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Error getting total active time for date {Date}", date);
             return TimeSpan.Zero;
         }
-
-        TimeSpan total = TimeSpan.Zero;
-        foreach (var s in sessions)
-        {
-            var end = s.EndTime ?? DateTime.UtcNow;
-            var start = s.StartTime;
-            var dayStart = date.Date;
-            var dayEnd = dayStart.AddDays(1);
-            var effectiveStart = start > dayStart ? start : dayStart;
-            var effectiveEnd = end < dayEnd ? end : dayEnd;
-            if (effectiveEnd > effectiveStart)
-            {
-                total += effectiveEnd - effectiveStart;
-            }
-        }
-        return total;
     }
 
 
@@ -234,35 +262,49 @@ public class TrackerService : ITrackerService
     public async Task<List<(string ProcessName, TimeSpan TotalTime)>> GetTopProcessesAsync(DateTime start,
         DateTime end, int top = 5)
     {
-        var sessions = await _activitySessionRepository.GetAllProcessesAsync(start, end);
-
-        if (sessions == null || sessions.Count == 0)
+        try
         {
+            var sessions = await _activitySessionRepository.GetAllProcessesAsync(start, end);
+
+            if (sessions == null || sessions.Count == 0)
+            {
+                return new List<(string ProcessName, TimeSpan TotalTime)>();
+            }
+
+            var grouped = sessions
+           .Where(s => s.EndTime.HasValue)
+           .GroupBy(s => s.ProcessName)
+           .Select(g => (
+               ProcessName: g.Key,
+               TotalTime: TimeSpan.FromTicks(g.Sum(s => (s.EndTime!.Value - s.StartTime).Ticks))
+           ))
+           .OrderByDescending(x => x.TotalTime)
+           .Take(top)
+           .ToList();
+
+            return grouped;
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Error getting top processes");
             return new List<(string ProcessName, TimeSpan TotalTime)>();
         }
-
-        var grouped = sessions
-       .Where(s => s.EndTime.HasValue)
-       .GroupBy(s => s.ProcessName)
-       .Select(g => (
-           ProcessName: g.Key,
-           TotalTime: TimeSpan.FromTicks(g.Sum(s => (s.EndTime!.Value - s.StartTime).Ticks))
-       ))
-       .OrderByDescending(x => x.TotalTime)
-       .Take(top)
-       .ToList();
-
-        return grouped;
     }
 
     // Get all sessions since system start 
     public async Task<List<ActivitySession>> GetSessionsSinceSystemStartAsync()
     {
-        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
-        var systemStart = DateTime.UtcNow - uptime;
+        try
+        {
+            var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+            var systemStart = DateTime.UtcNow - uptime;
 
-        var session = await _activitySessionRepository.GetAllProcessesAsync(systemStart, DateTime.UtcNow);
+            var session = await _activitySessionRepository.GetAllProcessesAsync(systemStart, DateTime.UtcNow);
 
-        return session ?? new List<ActivitySession>();
+            return session ?? new List<ActivitySession>();
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Error getting sessions since system start");
+            return new List<ActivitySession>();
+        }
     }
 }
