@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36616.10 d17.14
+VisualStudioVersion = 17.14.36616.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigBrother.Presentation", "BigBrotherApp\BigBrother.Presentation.csproj", "{454DE927-7F51-4D72-9F7D-21CAD3B46E9F}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigBrother.Application", "BigBrother.Application\BigBrother.Application.csproj", "{1F5AE0A2-EE2F-4008-92C5-3CE6B4DF3589}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigBrother.Infrustructure", "BigBrother.Infrustructure\BigBrother.Infrustructure.csproj", "{62E9985A-9BD4-4FFE-9994-E974C58E8414}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigBrother.Application.Tests", "BigBrotherApp.Applications.Tests\BigBrother.Application.Tests.csproj", "{3AC29BEA-CCF0-44B0-9AEB-829E30633439}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{62E9985A-9BD4-4FFE-9994-E974C58E8414}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62E9985A-9BD4-4FFE-9994-E974C58E8414}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62E9985A-9BD4-4FFE-9994-E974C58E8414}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AC29BEA-CCF0-44B0-9AEB-829E30633439}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AC29BEA-CCF0-44B0-9AEB-829E30633439}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AC29BEA-CCF0-44B0-9AEB-829E30633439}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AC29BEA-CCF0-44B0-9AEB-829E30633439}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
