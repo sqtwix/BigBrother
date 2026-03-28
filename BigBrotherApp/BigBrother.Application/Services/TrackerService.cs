@@ -1,14 +1,7 @@
 ﻿using BigBrother.Application.Interfaces;
 using BigBrother.Application.Utils;
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using BigBrother.Domain.Entities;
-using BigBrother.Application.Utils;
 using BigBrother.Application.DTOs;
 
 
