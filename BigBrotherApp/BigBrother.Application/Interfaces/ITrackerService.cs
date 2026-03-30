@@ -9,8 +9,8 @@ public interface ITrackerService
     // Inteface for methods of TrackerService
 
     // INNER METHODS (backend code, that not used by UI)
-    //Task StartTrackingAsync();
-    //Task StopTrackingAsync();
+    Task StartTrackingAsync();
+    Task StopTrackingAsync();
     //void UpdateCurrentSession(object state);
     //Task CloseCurrentSessionAsync();
     //Task PeriodicSaveAsync();
