@@ -5,8 +5,128 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BigBrotherApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Background="#a0abbe"
+        Title="BigBrother" Height="450" Width="800">
 
+    <Window.Resources>
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#275162"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="18"
+                            Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#45a049"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#3e8e41"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+            <Style x:Key="GroupBoxStyle" TargetType="GroupBox">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#275162"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="FontSize" Value="22"/>
+                <Setter Property="FontFamily" Value="Consolas"/>
+                <Setter Property="Padding" Value="10,5"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="BorderBrush" Value="#275162"/>
+            </Style>
+    </Window.Resources>
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock 
+            Text="BigBrother"
+            FontSize="30"
+            FontWeight="Bold"
+            FontFamily="Consolas"
+            Foreground="#275162" 
+            Margin="0,0,0,10"/>
+
+        <!-- Control -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,5">
+            <Button Command="{Binding StartTrackingCommand}"
+                    Content="▶ Start" 
+                    Width="140" 
+                    Style="{StaticResource RoundedButtonStyle}"
+                    Margin="0,0,10,0"/>
+
+            <Button Command="{Binding StopTrackingCommand}" 
+                    Content="⏹ Stop"
+                    Style="{StaticResource RoundedButtonStyle}"
+                    Width="140"/>
+
+            <Button Command="{Binding RefreshStatsCommand}" 
+                    Content="🔄 Update" 
+                    Width="140" 
+                    Style="{StaticResource RoundedButtonStyle}"
+                    Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <!-- Block of current activity-->
+        <GroupBox Grid.Row="2"
+                  Header="Current activity" 
+                  Margin="0,15"
+                  Style="{StaticResource GroupBoxStyle}">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Process:" Grid.Row="0" Grid.Column="0" Margin="0,5,10,5"/>
+                <TextBlock Text="{Binding CurrentProcess}" Grid.Row="0" Grid.Column="1" Margin="0,5,0,5" FontWeight="Bold"/>
+
+                <TextBlock Text="Window:" Grid.Row="1" Grid.Column="0" Margin="0,5,10,5"/>
+                <TextBlock Text="{Binding CurrentWindow}" Grid.Row="1" Grid.Column="1" Margin="0,5,0,5" TextWrapping="Wrap"/>
+
+                <TextBlock Text="Time:" Grid.Row="2" Grid.Column="0" Margin="0,5,10,5"/>
+                <TextBlock Text="{Binding CurrentDuration}" Grid.Row="2" Grid.Column="1" Margin="0,5,0,5"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Sysytem info and statistic -->
+        <GroupBox Grid.Row="3" 
+                  Header="System" 
+                  Margin="0,0,0,0"
+                  Style="{StaticResource GroupBoxStyle}">
+            <StackPanel Margin="10">
+                <TextBlock Text="{Binding SystemUptime, StringFormat='Время работы ОС: {0}'}"/>
+            </StackPanel>
+        </GroupBox>
     </Grid>
+    </ScrollViewer>
 </Window>
