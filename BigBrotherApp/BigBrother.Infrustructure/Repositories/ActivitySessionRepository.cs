@@ -1,4 +1,5 @@
 ﻿using BigBrother.Application.Interfaces;
+using BigBrother.Application.Utils;
 using BigBrother.Domain.Entities;
 using BigBrother.Infrustructure.Persistance;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,12 @@ public class ActivitySessionRepository : IActivitySessionRepository
     // Adding session
     public async Task AddProcessAsync(ActivitySession session)
     {
+        // Checking that procces not in ignoredSet
+        if (IgnoredProcesses.IsIgnored(session.ProcessName))
+        { 
+            return; 
+        }
+
         await _context.Sessions.AddAsync(session);
     }
 
@@ -36,15 +43,21 @@ public class ActivitySessionRepository : IActivitySessionRepository
         var query = _context.Sessions
             .Where(s => s.StartTime >= start && (s.EndTime <= end || s.EndTime == null));
 
-        return await query.ToListAsync();
+        var result = await query.ToListAsync();
+        return result.Where(s => !IgnoredProcesses.IsIgnored(s.ProcessName)).ToList();
     }
 
     // Get session By Id
     public async Task<ActivitySession?> GetProcessById(int processId)
     {
-        return await _context.Sessions.FindAsync(new object[] { processId });
-    }
+        var session = await _context.Sessions.FindAsync(processId);
+        if (session != null && IgnoredProcesses.IsIgnored(session.ProcessName))
+        {
+            return null;
+        }
 
+        return session;
+    }
 
     // Deleting process by id
     public async Task DeleteProcessAsync(int processId)
@@ -62,9 +75,11 @@ public class ActivitySessionRepository : IActivitySessionRepository
     {
         var dayStart = date.Date;
         var dayEnd = dayStart.AddDays(1);
-        return await _context.Sessions
+        var sessions = await _context.Sessions
             .Where(s => s.StartTime < dayEnd && (s.EndTime == null || s.EndTime > dayStart))
             .ToListAsync();
+
+        return sessions.Where(s => !IgnoredProcesses.IsIgnored(s.ProcessName)).ToList();
     }
 
     // Determined savechanges method

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace BigBrother.Presentation.ViewModels;
@@ -46,13 +47,21 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanStartTracking))]
     private async Task StartTrackingAsync()
     {
-        await _trackerService.StartTrackingAsync();
-        IsTracking = true;
+        try
+        {
+            await _trackerService.StartTrackingAsync();
+            IsTracking = true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"StartTrackingAsync failed: {ex.Message}");
+            MessageBox.Show("Ошибка в старте");
+        }
     }
 
     private bool CanStartTracking() => !IsTracking;
 
-    [RelayCommand(CanExecute = nameof(CanStartTracking))]
+    [RelayCommand(CanExecute = nameof(CanStopTracking))]
     private async Task StopTrackingAsync()
     {
         await _trackerService.StopTrackingAsync();

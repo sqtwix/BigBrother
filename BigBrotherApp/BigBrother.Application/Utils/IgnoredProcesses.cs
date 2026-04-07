@@ -13,7 +13,7 @@ public static class IgnoredProcesses
     private static readonly HashSet<string> _ignoredProcesses =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "BigBrotherApp",
+            "BigBrother.Presentation",
             "BigBrother",
             "ApplicationFrameHost", // оболочка UWP
             "SearchApp",            // поиск Windows

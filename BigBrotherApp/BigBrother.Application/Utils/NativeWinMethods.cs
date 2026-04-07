@@ -35,13 +35,6 @@ public static class NativeWinMethods
                     using (Process proc = Process.GetProcessById((int)processId))
                     {
                         string processName = proc.ProcessName;
-
-                        // Checking that procces not in ignoredSet
-                        if (IgnoredProcesses.IsIgnored(processName))
-                        {
-                            return (null, null); 
-                        }
-
                         return (processName, sb.ToString());
                     }
                 }

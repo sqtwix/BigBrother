@@ -78,17 +78,29 @@ public class TrackerService : ITrackerService
             var idleTime = NativeWinMethods.GetIdleTime();
             bool isUserActive = idleTime < TimeSpan.FromSeconds(IdleTresholdSeconds);
 
+            // 1. Если нет активности или нет активного окна – закрываем сессию
+            if (!isUserActive || string.IsNullOrEmpty(processName))
+            {
+                lock (_lock)
+                {
+                    if (_currentSession != null) _ = CloseCurrentSessionAsync();
+                }
+                return;
+            }
+
+            // 2. Если процесс в игнор-листе – закрываем сессию и выходим (не отслеживаем)
+            if (IgnoredProcesses.IsIgnored(processName))
+            {
+                lock (_lock)
+                {
+                    if (_currentSession != null) _ = CloseCurrentSessionAsync();
+                }
+                return;
+            }
+
+            // 3. Нормальная обработка: создание/обновление сессии
             lock (_lock)
             {
-                if (!isUserActive || string.IsNullOrEmpty(processName))
-                {
-                    if (_currentSession != null)
-                    {
-                        _ = CloseCurrentSessionAsync(); // fire-and-forget
-                    }
-                    return;
-                }
-
                 if (_currentSession == null)
                 {
                     _currentSession = new ActivitySession
@@ -103,13 +115,12 @@ public class TrackerService : ITrackerService
                          _currentSession.WindowTitle != windowTitle)
                 {
                     _ = CloseCurrentSessionAsync();
-
                     _currentSession = new ActivitySession
                     {
                         ProcessName = processName,
                         WindowTitle = windowTitle,
                         StartTime = DateTime.UtcNow
-                    };  
+                    };
                     _ = _activitySessionRepository.AddProcessAsync(_currentSession);
                 }
             }
