@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Debug;
 using System.Windows;
+using BigBrother.Presentation.ViewModels;
 
 namespace BigBrotherApp
 {
